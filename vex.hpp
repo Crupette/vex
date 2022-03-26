@@ -5,17 +5,22 @@
 #include <cmath>
 #include <cstddef>
 #include <ostream>
+#include <concepts>
 
 namespace vex
 {
 
-template<typename T, unsigned D>
+template<typename T>
+concept vectype = std::is_integral<T>::value || std::is_floating_point<T>::value;
+
+template<vectype T, unsigned D>
+    requires (D > 1)
 struct vec_dimd
 {
     std::array<T, D> v;
     
     constexpr vec_dimd() = default;
-    template<typename ...Args>
+    template<vectype ...Args>
     constexpr vec_dimd(Args&& ...args) : v{args...} {}
     constexpr vec_dimd(T args[D]) : v(args) {}
     constexpr vec_dimd(T fill) { v.fill(fill); }
@@ -48,15 +53,40 @@ struct vec_dimd
         return os;
     }
 
-    T magnitude() const { T t; for(size_t i = 0; i < D; i++) t += v[i] * v[i]; return sqrt(t); }
-    T dot(const vec_dimd<T, D> &b) const { T t = v[0] * b.v[0]; for(size_t i = 1; i < D; i++) t += (v[i] * b.v[i]); return t; }
+    /*Finds the distance from the origin to the ray cast in D dimension space using components of vec*/
+    constexpr T magnitude() const { T t; for(size_t i = 0; i < D; i++) t += v[i] * v[i]; return std::pow(t, 1./D); }
+
+    /*Finds the dot product of itself and another vec of same T and D*/
+    constexpr T dot(const vec_dimd<T, D> &b) const { T t; for(size_t i = 0; i < D; i++) t += (v[i] * b.v[i]); return t; }
+    friend constexpr T dot(const vec_dimd<T,D> &lhs, const vec_dimd<T,D> &rhs) { return lhs.dot(rhs); }
 };
 
-template<typename T>
+template<vectype T>
 using vec2 = vec_dimd<T, 2>;
 
-template<typename T>
+template<vectype T>
 using vec3 = vec_dimd<T, 3>;
+
+/*(x, y) -> (r, theta)*/
+template<vectype R, vectype P>
+static constexpr vec2<R> 
+polar(const vec2<P> &in)
+{
+    return vec2<R>(
+                std::sqrt(in[0] * in[0] + in[1] * in[1]),
+                std::atan2(in[1], in[0])
+            );
+}
+/*(r, theta) -> (x, y)*/
+template<vectype R, vectype P>
+static constexpr vec2<R> 
+cartesian(const vec2<P> &in)
+{
+    return vec2<R>(
+                cos(in[1]) * in[0],
+                sin(in[1]) * in[0]
+            );
+}
 
 };
 
