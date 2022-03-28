@@ -54,7 +54,7 @@ struct vec_dimd
     }
 
     /*Finds the distance from the origin to the ray cast in D dimension space using components of vec*/
-    constexpr T magnitude() const { T t{}; for(size_t i = 0; i < D; i++) t += v[i] * v[i]; return std::pow(t, 1./D); }
+    constexpr T magnitude() const { T t{}; for(size_t i = 0; i < D; i++) t += v[i] * v[i]; return std::sqrt(t); }
 
     /*Finds the dot product of itself and another vec of same T and D*/
     constexpr T dot(const vec_dimd<T, D> &b) const { T t; for(size_t i = 0; i < D; i++) t += (v[i] * b.v[i]); return t; }
